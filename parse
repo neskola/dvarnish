@@ -22,7 +22,8 @@ envs=`printenv`
 
 # Remove the default.vcl file
 
-echo "vcl 4.0;
+echo 'vcl 4.0;
+
 backend default {
 .host = "127.0.0.1";
 .port = "8080";
@@ -46,14 +47,16 @@ set req.http.X-Forwarded-For = client.ip;
  
 # Remove has_js and CloudFlare/Google Analytics __* cookies and statcounter is_unique
 set req.http.Cookie = regsuball(req.http.Cookie, "(^|;\s*)(_[_a-z]+|has_js|is_unique)=[^;]*", "");
+#set req.http.Cookie = req.http.Cookie;
 # Remove a ";" prefix, if present.
-set req.http.Cookie = regsub(req.http.Cookie, "^;\s*", "");
+#set req.http.Cookie = regsub(req.http.Cookie, "^;\s*", "");
  
 # Either the admin pages or the login
 if (req.url ~ "/wp-(login|admin|cron)") {
-# Don't cache, pass to backend
+# Dont cache, pass to backend
 return (pass);
-}" > /etc/varnish/default.vcl
+}
+' > /etc/varnish/default.vcl
 # Loop through all of our variables
 for env in $envs
 do
@@ -123,3 +126,6 @@ sub vcl_recv {
     set req.backend_hint = cluster1.backend();
 }
 EOF
+
+cat /etc/varnish/default.vcl
+
