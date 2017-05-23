@@ -3,7 +3,7 @@ MAINTAINER  Niki Eskola
  
 # Update the package repository
 RUN apk update
-RUN apk add git vim varnish
+RUN apk add git vim varnish bash bash-doc bash-completion
 #RUN apt-get -qq update
 
 # Install base system

@@ -28,6 +28,8 @@ FILENAME=$1
 
 echo 'vcl 4.0;
 
+import directors;
+
 backend default {
   .host = "127.0.0.1";
   .port = "8080";
@@ -43,10 +45,10 @@ acl purge {
 }
  
 sub vcl_recv {
-  set req.grace = 2m;
+  set req.http.grace = 120;
  
   # Set X-Forwarded-For header for logging in nginx
-  remove req.http.X-Forwarded-For;
+  unset req.http.X-Forwarded-For;
   set req.http.X-Forwarded-For = client.ip;
  
   # Remove has_js and CloudFlare/Google Analytics __* cookies and statcounter is_unique
@@ -106,7 +108,7 @@ do
 
   # create each backend in the load balancer
   cat >> ${FILENAME}.vcl << EOF
-     cluster1.add.backend = (${name}, 1.0); 
+     cluster1.add_backend(${name}); 
 EOF
 
   fi
@@ -117,7 +119,7 @@ done
 cat >> ${FILENAME}.vcl << EOF
 }
   
-sub vcl_fetch {
+sub vcl_backend_response {
    if (req.url ~ "\.(css|js|png|gif|jpg)$") {
      unset beresp.http.set-cookie;
      set beresp.ttl = 66h;
