@@ -38,12 +38,7 @@ backend default {
   .between_bytes_timeout = 60s;
   .max_connections = 800;
 }
- 
-acl purge {
-  "127.0.0.1";
-  "localhost";
-}
- 
+  
 sub vcl_recv {
   set req.http.grace = 120;
  
@@ -61,6 +56,10 @@ sub vcl_recv {
     # Dont cache, pass to backend
     return (pass);
   }
+  if (req.method == "POST") {
+    # Dont cache, pass to backend
+    return (pass);
+  } 
 }' > ${FILENAME}.vcl
 # Loop through all of our variables
 for env in $envs
@@ -120,7 +119,7 @@ cat >> ${FILENAME}.vcl << EOF
 }
   
 sub vcl_backend_response {
-   if (req.url ~ "\.(css|js|png|gif|jpg)$") {
+   if (bereq.url ~ "\.(css|js|png|gif|jpg)$") {
      unset beresp.http.set-cookie;
      set beresp.ttl = 66h;
   }
@@ -128,6 +127,10 @@ sub vcl_backend_response {
   
 sub vcl_recv {
     set req.backend_hint = cluster1.backend();
+    if (req.method == "POST") {
+      # Dont cache, pass to backend
+      return (pass);
+    }
 }
 EOF
 
